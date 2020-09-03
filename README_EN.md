@@ -56,7 +56,6 @@ Then "Object_Detection" will appear in the folder as shown below, and you can cl
 
 Then enter the following command.  
 ```
-git clone https://github.com/yusuke-1105/Object_Detection
 cd Object_Detection
 wget https://www.dropbox.com/s/6dlv9448ssy8lki/Archive.zip?dl=0 -O Models/Archive.zip
 unzip Models/Archive.zip -d Models/
@@ -102,6 +101,9 @@ You should also install Remote Development. This is a very easy to use extension
 After installing Remote Development, you do like below.
 ```
 git clone https://github.com/yusuke-1105/Object_Detection
+cd Object_Detection
+wget https://www.dropbox.com/s/6dlv9448ssy8lki/Archive.zip?dl=0 -O Models/Archive.zip
+unzip Models/Archive.zip -d Models/
 ```
 And move the ".devcontainer" under the `Docker` directory to the main directory (where this README and programs are located). `dockerfile` under the `Docker` directory, line 43
 ```docker

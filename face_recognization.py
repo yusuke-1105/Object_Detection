@@ -1,4 +1,4 @@
-from openvino.inference_engine import IENetwork, IEPlugin
+from openvino.inference_engine import IECore
 import numpy as np
 import cv2
 import os
@@ -50,12 +50,14 @@ def finding_faces(img_path, exec_net):   #絵文字の貼り付け
 def main():
 
     # モデルの読み込み（顔検出）
-    plugin = IEPlugin(device="CPU")     # ターゲットデバイスの指定 
-    net = IENetwork(model=FACE_MODEL, weights=FACE_WEIGHT)
-    exec_net = plugin.load(network=net)
+    ie=IECore()
+    net = ie.read_network(model=FACE_MODEL, weights=FACE_WEIGHT)
+    exec_net = ie.load_network(network=net, device_name="CPU")
 
     files=os.listdir('Pre_Image')   #読み込む写真のファイル名取得
-    files.remove('note.txt')
+    try: files.remove('note.txt') or files.remove('__MACOSX')
+    except: pass
+    #files.remove('.DS_Store')
 
     for file in files:
         print(f'[INFO] File: {file}')

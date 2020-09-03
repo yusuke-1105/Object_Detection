@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 
-from openvino.inference_engine import IENetwork, IEPlugin
+from openvino.inference_engine import IECore
 from math import exp
 import numpy as np
 import time
@@ -245,15 +245,16 @@ def object_detection(img_path, net, exec_net):
 	return frame
 
 def main():
+	# モデルの読み込み（物体検出）
+	ie=IECore()
+	net = ie.read_network(model=OBJECT_MODEL, weights=OBJECT_WEIGHT)
+	exec_net = ie.load_network(network=net, device_name="CPU", num_requests=1)
 	
-	# モデルの読み込み（顔検出） 
-	plugin = IEPlugin(device="CPU")
-	net = IENetwork(model=OBJECT_MODEL, weights=OBJECT_WEIGHT)
-	exec_net = plugin.load(network=net, num_requests=1)
-
 	#読み込む写真のファイル名取得
 	files=os.listdir('Pre_Image')
-	files.remove('note.txt')
+	try: files.remove('note.txt') or files.remove('__MACOSX')
+	except: pass
+	#files.remove('.DS_Store')
 	
 	for file in files:
 		print(f'[INFO] File: {file}')
