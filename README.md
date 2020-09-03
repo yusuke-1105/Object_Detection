@@ -55,7 +55,6 @@ git clone https://github.com/yusuke-1105/Object_Detection
 
 そして、以下のコマンドを入力してください。  
 ```
-git clone https://github.com/yusuke-1105/Object_Detection
 cd Object_Detection
 wget https://www.dropbox.com/s/6dlv9448ssy8lki/Archive.zip?dl=0 -O Models/Archive.zip
 unzip Models/Archive.zip -d Models/
@@ -100,6 +99,7 @@ DockerとVisual Studio Codeをしようすることで、ローカル環境で�
 
 Remote Developmentを導入し終わった後、お好みのディレクトリに
 ```
+git clone https://github.com/yusuke-1105/Object_Detection
 cd Object_Detection
 wget https://www.dropbox.com/s/6dlv9448ssy8lki/Archive.zip?dl=0 -O Models/Archive.zip
 unzip Models/Archive.zip -d Models/
