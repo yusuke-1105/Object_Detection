@@ -15,7 +15,7 @@ FACE_WEIGHT= os.path.join(MODEL_PATH, "face-detection-retail-0004.bin")
 
 def finding_faces(img_path, exec_net):   #絵文字の貼り付け    
 
-    how_many_faces, data=0, []            #その写真に含まれる顔の数、座標、感情を保存するための変数
+    how_many_faces, data=0, []            #その写真に含まれる顔の数、座標を保存するための変数
     #画像読み込みの一連の処理
     frame=cv2.imread(img_path)
     img_face = cv2.resize(frame, (300, 300))    # イメージサイズの変更 
