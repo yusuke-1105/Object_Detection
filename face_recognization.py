@@ -43,7 +43,7 @@ def finding_faces(img_path, exec_net):   #絵文字の貼り付け
             data.append([x_1, y_1, x_2, y_2])   #顔の座標の代入
             how_many_faces+=1                   #その写真の顔の数を数える
     # 顔に緑色の四角形で囲む処理
-        for a in range(how_many_faces): cv2.rectangle(frame,tuple(data[a][0:2]),tuple(data[a][2:4]),(0,255,0),3)
+    for a in range(how_many_faces): cv2.rectangle(frame,tuple(data[a][0:2]),tuple(data[a][2:4]),(0,255,0),3)
 
     return frame
 
