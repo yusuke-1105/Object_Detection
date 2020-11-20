@@ -254,7 +254,7 @@ def main():
 	files=os.listdir('Pre_Image')
 	try: files.remove('note.txt') or files.remove('__MACOSX')
 	except: pass
-	#files.remove('.DS_Store')
+	#files.remove('.DS_Store') #macの人向け
 	
 	for file in files:
 		print(f'[INFO] File: {file}')
