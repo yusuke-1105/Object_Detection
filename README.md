@@ -56,7 +56,7 @@ git clone https://github.com/yusuke-1105/Object_Detection
 そして、以下のコマンドを入力してください。  
 ```
 cd Object_Detection
-wget https://www.dropbox.com/s/6dlv9448ssy8lki/Archive.zip?dl=0 -O Models/Archive.zip
+wget https://www.dropbox.com/s/5dwwmgga1hpn7dh/Archive.zip?dl=0 -O Models/Archive.zip
 unzip Models/Archive.zip -d Models/
 ```
 ここで`Pre_Image`フォルダにお好きな写真をアップロードしてください。Finder(Mac)、Exploler(Windows)からまとめてアップロードすることができます。  
@@ -128,4 +128,6 @@ ARG package_url=<your_package_url>
 [Converting a TensorFlow* Model](https://docs.openvinotoolkit.org/latest/openvino_docs_MO_DG_prepare_model_convert_model_Convert_Model_From_TensorFlow.html)  
 [YOLOv3 を OpenVINO™ ツールキットで使用する IR 形式へ変換してみよう](https://macnicago.zendesk.com/hc/ja/articles/360042709871-YOLOv3-を-OpenVINO-ツールキットで使用する-IR-形式へ変換してみよう)  
 [Install Intel® Distribution of OpenVINO™ toolkit for Linux* from a Docker* Image](https://docs.openvinotoolkit.org/latest/openvino_docs_install_guides_installing_openvino_docker_linux.html)  
-[Introduction to Intel® Deep Learning Deployment Toolkit](https://docs.openvinotoolkit.org/latest/openvino_docs_IE_DG_Introduction.html)
+[Introduction to Intel® Deep Learning Deployment Toolkit](https://docs.openvinotoolkit.org/latest/openvino_docs_IE_DG_Introduction.html)  
+[gist.github.com](https://gist.github.com/AdamGerzsai/d2b596729e127e449cbf2e6613411dd0)  
+[face recognition model](https://download.01.org/opencv/2021/openvinotoolkit/2021.2/open_model_zoo/models_bin/3/face-detection-retail-0004/)
