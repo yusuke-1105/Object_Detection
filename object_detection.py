@@ -1,5 +1,5 @@
 '''
-Copyright [yusuke-1105] [openvinotoolkit]
+ Copyright (C) 2018-2019 Intel Corporation
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ limitations under the License.
 from openvino.inference_engine import IECore
 from math import exp
 import numpy as np
+import ngraph as ng
 import time
 import cv2
 import os
@@ -26,8 +27,10 @@ import os
 # モデルの保存場所
 MODEL_PATH="Models"
 # objectのモデルの場所
-OBJECT_MODEL = os.path.join(MODEL_PATH, "yolov3.xml")
-OBJECT_WEIGHT= os.path.join(MODEL_PATH, "yolov3.bin")
+# OBJECT_MODEL = os.path.join(MODEL_PATH, "yolov3.xml")
+# OBJECT_WEIGHT= os.path.join(MODEL_PATH, "yolov3.bin")
+OBJECT_MODEL = os.path.join(MODEL_PATH, "yolo-v3-tf.xml")
+OBJECT_WEIGHT= os.path.join(MODEL_PATH, "yolo-v3-tf.bin")
 # ラベルの保存場所
 COCO=os.path.join(MODEL_PATH, "coco.names")
 
@@ -42,12 +45,12 @@ class YoloParams_v3:
         self.side = side
         self.anchors = [10.0, 13.0, 16.0, 30.0, 33.0, 23.0, 30.0, 61.0, 62.0, 45.0, 59.0, 119.0, 116.0, 90.0, 156.0,
                         198.0,
-                        373.0, 326.0] if 'anchors' not in param else [float(a) for a in param['anchors'].split(',')]
+                        373.0, 326.0] if 'anchors' not in param else param['anchors']
 
         self.isYoloV3 = False
 
         if param.get('mask'):
-            mask = [int(idx) for idx in param['mask'].split(',')]
+            mask = param['mask']
             self.num = len(mask)
 
             maskedAnchors = []
@@ -56,21 +59,7 @@ class YoloParams_v3:
             self.anchors = maskedAnchors
 
             self.isYoloV3 = True # Weak way to determine but the only one.
-'''
-class TinyYoloParams_v3:
-    # ------------------------------------------- layer parameters を抽出 ------------------------------------------
-    # Magic numbers は yolo samples からコピー
-	def __init__(self, param, side):
-		self.num = 3 if 'num' not in param else len(param['mask'].split(',')) if 'mask' in param else int(param['num'])
-		self.coords = 4 if 'coords' not in param else int(param['coords'])
-		self.classes = 80 if 'classes' not in param else int(param['classes'])
-		self.anchors = [float(a) for a in param['anchors'].split(',')]
-		self.side = side
-		if self.side == 13: self.anchor_offset = 2 * 3
-		elif self.side == 26: self.anchor_offset = 2 * 0
-		else: assert False, "Invalid output size. Only 13 and 26 " \
-				"sizes are supported for output spatial dimensions"
-'''
+
 class TinyYolo_v3:
 	@staticmethod
 	def entry_index(side, coord, classes, location, entry):
@@ -148,45 +137,7 @@ class TinyYolo_v3:
 			objects.append(TinyYolo_v3.scale_bbox(x=x, y=y, height=height, width=width, class_id=class_id, confidence=confidence,
 									im_h=orig_im_h, im_w=orig_im_w, is_proportional=0.15))
 		return objects
-	'''
-	def parse_yolo_region(blob, resized_image_shape, frameinal_im_shape, params, threshold):
-		# ------------------------------------------ output parameters を検証 ------------------------------------------
-		_, _, out_blob_h, out_blob_w = blob.shape
-		assert out_blob_w == out_blob_h, "Invalid size of output blob. It sould be in NCHW layout and height should " \
-										 "be equal to width. Current height = {}, current width = {}" \
-										 "".format(out_blob_h, out_blob_w)
 
-		# ------------------------------------------ layer parameters を抽出 -------------------------------------------
-		frame_im_h, frame_im_w = frameinal_im_shape
-		resized_image_h, resized_image_w = resized_image_shape
-		objects = list()
-		predictions = blob.flatten()
-		side_square = params.side * params.side
-
-		# ------------------------------------------- YOLO Region output を解析 -------------------------------------------
-		for i in range(side_square):
-			row = i // params.side
-			col = i % params.side
-			for n in range(params.num):
-				obj_index = TinyYolo_v3.entry_index(params.side, params.coords, params.classes, n * side_square + i, params.coords)
-				scale = predictions[obj_index]
-				if scale < threshold: continue
-				box_index = TinyYolo_v3.entry_index(params.side, params.coords, params.classes, n * side_square + i, 0)
-				x = (col + predictions[box_index + 0 * side_square]) / params.side * resized_image_w
-				y = (row + predictions[box_index + 1 * side_square]) / params.side * resized_image_h
-				try: w_exp, h_exp = exp(predictions[box_index + 2 * side_square]), exp(predictions[box_index + 3 * side_square])
-				except OverflowError: continue
-				w = w_exp * params.anchors[params.anchor_offset + 2 * n]
-				h = h_exp * params.anchors[params.anchor_offset + 2 * n + 1]
-				for j in range(params.classes):
-					class_index = TinyYolo_v3.entry_index(params.side, params.coords, params.classes, n * side_square + i,
-						params.coords + 1 + j)
-					confidence = scale * predictions[class_index]
-					if confidence < threshold: continue
-					objects.append(TinyYolo_v3.scale_bbox(x=x, y=y, h=h, w=w, class_id=j, confidence=confidence,
-						h_scale=frame_im_h / resized_image_h, w_scale=frame_im_w / resized_image_w))
-		return objects
-	'''
 
 def object_detection(img_path, net, exec_net):
 
@@ -195,10 +146,12 @@ def object_detection(img_path, net, exec_net):
 	#「object」を検出して四角で囲む。その際の四角の色を決める
 	COLORS = np.random.uniform(0, 255, size=(len(LABELS), 3))
 	
+	cur_request_id=0
+        
 	#おまじない----------------------------------
-	inputBlob = next(iter(net.inputs))
+	inputBlob = next(iter(net.input_info))
 	net.batch_size = 1
-	n, c, h, w = net.inputs[inputBlob].shape
+	n, c, h, w = net.input_info[inputBlob].input_data.shape
 	prob_threshold, iou_threshold=0.5, 0.15
 
 	frame = cv2.imread(img_path)
@@ -207,15 +160,22 @@ def object_detection(img_path, net, exec_net):
 	img_object = img_object.reshape((n, c, h, w))
 	#--------------------------------------------
 
+	function = ng.function_from_cnn(net)
+    
 	# 推論実行(おまじない)
 	output = exec_net.infer({inputBlob: img_object})
 	objects = []
 
 	# 推論の実行により、検出されたobjectの範囲を決める
-	for (layerName, outBlob) in output.items():
-		layerParams = YoloParams_v3(net.layers[layerName].params, outBlob.shape[2])
-		objects += TinyYolo_v3.parse_yolo_region(outBlob, img_object.shape[2:], \
-												frame.shape[:-1], layerParams, prob_threshold)
+	if exec_net.requests[cur_request_id].wait(-1) == 0:
+		output = exec_net.requests[cur_request_id].output_blobs
+		for (layerName, outBlob) in output.items():
+			outBlob = outBlob.buffer.reshape(net.outputs[layerName].shape)
+			params = [x._get_attributes() for x in function.get_ordered_ops() if x.get_friendly_name() == layerName][0]
+			layerParams = YoloParams_v3(params, outBlob.shape[2])
+			objects += TinyYolo_v3.parse_yolo_region(outBlob, img_object.shape[2:], \
+										frame.shape[:-1], layerParams, prob_threshold)
+
 
 	# 検出したobjectsの信頼性が十分あるかを検証(本当に「object」かどうか)
 	for i in range(len(objects)):
@@ -227,20 +187,24 @@ def object_detection(img_path, net, exec_net):
 
 	# イメージ(全体)の縦の長さと横の長さをそれぞれ、endY、 endXに代入
 	endY, endX = frame.shape[:-1]
-	
+
+	print(len(objects))
+    
 	for obj in objects:
 		# objectの座標がイメージの範囲を超えていないかを精査
 		if obj["xmax"] > endX or obj["ymax"] > endY or obj["xmin"] < 0 or obj["ymin"] < 0: continue
 
 		# そのobjectが何か、その可能性はどれくらいかを算出
 		label=f"{LABELS[obj['class_id']]}: {obj['confidence'] * 100:.2f}%"
-
+    
 		# 上記の「label」の表記する座標を算出
 		y = obj["ymin"] - 15 if obj["ymin"] - 15 > 15 else obj["ymin"] + 15
 
 		# objectのあるところの周りに四角形を描いて、その上部には上記の「label」を表記
 		cv2.rectangle(frame, (obj["xmin"], obj["ymin"]), (obj["xmax"], obj["ymax"]), COLORS[obj["class_id"]], 2)
 		cv2.putText(frame, label, (obj["xmin"], y), cv2.FONT_HERSHEY_SIMPLEX, 1, COLORS[obj["class_id"]], 3)
+        
+		print(label)
 
 	return frame
 
@@ -253,6 +217,8 @@ def main():
 	#読み込む写真のファイル名取得
 	files=os.listdir('Pre_Image')
 	try: files.remove('note.txt') or files.remove('__MACOSX')
+	except: pass
+	try: files.remove('.ipynb_checkpoints')
 	except: pass
 	#files.remove('.DS_Store') #macの人向け
 	
