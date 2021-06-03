@@ -57,6 +57,8 @@ def main():
     files=os.listdir('Pre_Image')   #読み込む写真のファイル名取得
     try: files.remove('note.txt') or files.remove('__MACOSX')
     except: pass
+    try: files.remove('.ipynb_checkpoints')
+    except: pass
     # files.remove('.DS_Store') #macの人向け
 
     for file in files:
